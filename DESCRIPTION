@@ -1,0 +1,14 @@
+Package: halfbaked
+Type: Package
+Title: some incomplete, quickly written tools
+Version: 0.1.2
+Author: Thomas Luechtefeld
+Maintainer: Thomas Luechtefeld <tom@insilica.co>
+Description: A bucket for half baked analysis tools. Tools should be migrated to their own packages when they become mature.
+License: Apache License Version 2.0
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.2
+Imports:
+	readr,
+	rstudioapi
