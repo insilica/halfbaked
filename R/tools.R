@@ -128,3 +128,17 @@ mpipe = function(...){mpipe.singleton$memopipe(...)}
 #' mpipe.forget()
 #' @export
 mpipe.forget = function(){mpipe.singleton$forget()}
+
+#' xpluck
+#' allows plucking from a list based on expression rather than string. which works with autocomplete better
+#' @param input_list a list to pluck from
+#' @param ... some code that deparses to a symbol that can be plucked
+#' @import purrr
+#' @examples
+#' xpluck(list(a=2),a)
+#' @export
+xpluck = function(input_list,...){
+  pluck(input_list,deparse(expr(...)))
+}
+
+
