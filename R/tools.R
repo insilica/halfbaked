@@ -32,64 +32,67 @@ runjob = function(expr,libs,jobname,jobfile){
 }
 
 
-#' resolve.id
-#' runjob
-#' resolve the bibliographic identifiers from an endnote record
-#' @export
-resolve.id = function(xmlrecord,type="endnote.xml"){
-  result = if(type == "endnote.xml"){
+##' resolve.id
+##' @concept how about an rendnote library?
+##' TODO this needs to be rewritten without the XML package.
+##' resolve the bibliographic identifiers from an endnote record
+##' @export
+# resolve.id = function(xmlrecord,type="endnote.xml"){
+#   result = if(type == "endnote.xml"){
+#
+#     x.list = XML::xmlParse(xmlrecord) |> XML::xmlToList() |> .[c("urls","electronic-resource-num")]
+#     x = c(x.list |> toString(),URLdecode(x.list |> toString())) |> toupper()
+#
+#     pmids = stringr::str_match(x,pattern = "PMID:([0-9]+)") |> .[!is.na(.[,1]),2] |> unique()
+#     dois  = stringr::str_match(x,pattern = "(10.\\d{4,9}/[-._;()/:A-Z0-9]+)") |> .[!is.na(.[,1]),2] |> unique()
+#
+#     data.frame(id=pmids) |> mutate(type = "pmid") |> bind_rows(data.frame(id=dois) |> mutate(type="doi"))
+#   }
+#
+#   if(result |> group_by(type) |> count() |> pull(n) |> max() > 1){
+#     warning("ambiguous resolution")
+#   }else if(nrow(result) == 0){
+#     warning("no resolution")
+#   }
+#   return(result)
+# }
 
-    x.list = XML::xmlParse(xmlrecord) %>% XML::xmlToList() %>% .[c("urls","electronic-resource-num")]
-    x = c(x.list %>% toString(),URLdecode(x.list %>% toString())) %>% toupper()
-
-    pmids = stringr::str_match(x,pattern = "PMID:([0-9]+)") %>% .[!is.na(.[,1]),2] %>% unique()
-    dois  = stringr::str_match(x,pattern = "(10.\\d{4,9}/[-._;()/:A-Z0-9]+)") %>% .[!is.na(.[,1]),2] %>% unique()
-
-    data.frame(id=pmids) %>% mutate(type = "pmid") %>% bind_rows(data.frame(id=dois) %>% mutate(type="doi"))
-  }
-
-  if(result %>% group_by(type) %>% count() %>% pull(n) %>% max() > 1){
-    warning("ambiguous resolution")
-  }else if(nrow(result) == 0){
-    warning("no resolution")
-  }
-  return(result)
-}
-
-#' extract.doi
+#' regex.doi
 #' a regex for extracting dois
+#' @concept how about a big library of useful regexes?
 #' @export
-extract.doi = function(string){
-  str_match_all(string,pattern = regex("(10.\\d{4,9}/[-._;()/:A-Z0-9]+)",ignore_case=T))[[1]] %>% .[!is.na(.[,1]),2] %>% unique()
-}
+regex.doi = "(10.\\d{4,9}/[-._;()/:A-Z0-9]+)"
 
-#' extract.doi
-#' extract abstract from endnote record
-#' this is terrible.
-#' @export
-extract.abstract = function(record){if(is.na(record)){list()}else{record %>% xmlParse() %>% xmlToList() %>% .$abstract %>% list()}}
+##' resolve.abstract
+##' TODO rewrite without the XML library
+##' request an abstract for a given bibliographic id from crossref and pubmed
+##' @import reutils
+##' @import rcrossref
+##' @import xml2
+##' @export
+# resolve.abstract = function(id,id.type){
+#   if(is.na(id)){
+#     NA_character_
+#   }else if(id.type=="doi"){
+#     tryCatch({rcrossref::cr_abstract(id)},error=function(e){NA_character_})
+#   }else if(id.type=="pmid"){
+#     res = efetch(id,"pubmed")$content |> xmlParse() |> xmlToList()
+#     a   = res$PubmedArticle$MedlineCitation$Article$Abstract |> .[names(.)=="AbstractText"]
+#     res = paste(unlist(a),collapse="\n\n")
+#     if(nchar(res)==0){NA_character_}else{res}
+#   }
+# }
 
-#' resolve.abstract
-#' request an abstract for a given bibliographic id from crossref and pubmed
-#' @export
-resolve.abstract = function(id,id.type){
-  if(is.na(id)){
-    NA_character_
-  }else if(id.type=="doi"){
-    tryCatch({rcrossref::cr_abstract(id)},error=function(e){NA_character_})
-  }else if(id.type=="pmid"){
-    res  = efetch(id,"pubmed")$content %>% xmlParse() %>% xmlToList()
-    a = res$PubmedArticle$MedlineCitation$Article$Abstract %>% .[names(.)=="AbstractText"]
-    res = paste(unlist(a),collapse="\n\n")
-    if(nchar(res)==0){NA_character_}else{res}
-  }
-}
 
 #' add.lib
 #' modifies the current notebook to add a library to the top chunk
 #' looks for a chunk called ```{r, setup and adds lines directly below
-#' @param libeg the library to add
-#' @example add.lib(library(abind))
+#' @import glue
+#' @param lib the library to add
+#' @param path path to an rmarkdown notebook (defaults to this current open notebook)
+#' @param eval whether or not to load the given library (default true)
+#' @examples
+#' # add.lib(library(readr))
 #' @export
 add.lib = function(lib,path=rstudioapi::getSourceEditorContext()$path,eval=T){
   nbtop = readr::read_lines(path)
@@ -97,15 +100,12 @@ add.lib = function(lib,path=rstudioapi::getSourceEditorContext()$path,eval=T){
   if(length(schun)==0){stop('no setup chunk, is there a line starting with "```{r, setup"?')}
   newlines = c(nbtop[1:schun],glue("library({lib})"),nbtop[-(1:schun)])
   readr::write_lines(newlines,path,append = F)
-  if(eval){library(lib,character.only = T)}
+  if(eval){requireNamespace(lib)}
 }
 
-#' memopipe
+#' mpipe.singleton
 #' @import memoise
 #' @import dplyr
-#' @param libeg the library to add
-#' @example add.lib(library(abind))
-#' @export
 mpipe.singleton = {
   evalfn   = memoise::memoise(function(egstring){cat("memoing");eval(parse(text = egstring))})
   memopipe = function(...){expr(...) |> deparse() |> evalfn()}
@@ -114,9 +114,16 @@ mpipe.singleton = {
 }
 
 #' mpipe
-#' @param libeg the library to add
-#' @example add.lib(library(abind))
+#' @import dplyr
+#' @param ... a pipe, see example
+#' @examples
+#' data.frame(a=2) |> mutate(b=3) |> mpipe() # memorizes the long chain
 #' @export
 mpipe = function(...){mpipe.singleton$memopipe(...)}
 
-
+#' mpipe.forget
+#' forget the mpipe cached values
+#' @examples
+#' mpipe.forget()
+#' @export
+mpipe.forget = function(){mpipe.singleton$forget()}

@@ -11,4 +11,10 @@ LazyData: true
 RoxygenNote: 7.1.2
 Imports:
 	readr,
-	rstudioapi
+	rstudioapi,
+	dplyr,
+	memoise,
+	rcrossref,
+	reutils,
+	xml2,
+	glue
