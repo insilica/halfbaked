@@ -114,6 +114,7 @@ mpipe.singleton = {
 }
 
 #' mpipe
+#' memoizes the results of a pipe and invalidates on the deparsed code.
 #' @import dplyr
 #' @param ... a pipe, see example
 #' @examples
