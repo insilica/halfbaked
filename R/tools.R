@@ -100,3 +100,23 @@ add.lib = function(lib,path=rstudioapi::getSourceEditorContext()$path,eval=T){
   if(eval){library(lib,character.only = T)}
 }
 
+#' memopipe
+#' @import memoise
+#' @import dplyr
+#' @param libeg the library to add
+#' @example add.lib(library(abind))
+#' @export
+mpipe.singleton = {
+  evalfn   = memoise::memoise(function(egstring){cat("memoing");eval(parse(text = egstring))})
+  memopipe = function(...){expr(...) |> deparse() |> evalfn()}
+  forgetfn = function(){forget(evalfn)}
+  list(evalfn=evalfn, memopipe=memopipe, forget=forgetfn)
+}
+
+#' mpipe
+#' @param libeg the library to add
+#' @example add.lib(library(abind))
+#' @export
+mpipe = function(...){mpipe.singleton$memopipe(...)}
+
+
