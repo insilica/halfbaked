@@ -107,20 +107,27 @@ add.lib = function(lib,path=rstudioapi::getSourceEditorContext()$path,eval=T){
 #' @import memoise
 #' @import dplyr
 mpipe.singleton = {
-  evalfn   = memoise::memoise(function(egstring){cat("memoing");eval(parse(text = egstring))})
-  memopipe = function(...){expr(...) |> deparse() |> evalfn()}
+
+  evalfn   = memoise::memoise(function(egstring,invalidate.obj){
+    cat("memoing");eval(parse(text = egstring))
+  })
+
   forgetfn = function(){forget(evalfn)}
-  list(evalfn=evalfn, memopipe=memopipe, forget=forgetfn)
+  list(evalfn=evalfn, forget=forgetfn)
 }
 
 #' mpipe
 #' memoizes the results of a pipe and invalidates on the deparsed code.
 #' @import dplyr
+#' @param iv an object to invalidate cache, can be a name or any other hashable object. If it changes, the function will be re-memoized.
 #' @param ... a pipe, see example
 #' @examples
 #' data.frame(a=2) |> mutate(b=3) |> mpipe() # memorizes the long chain
 #' @export
-mpipe = function(...){mpipe.singleton$memopipe(...)}
+mpipe = function(expr,iv=NA){
+  egstring = substitute(expr) |> deparse()
+  mpipe.singleton$evalfn(egstring,iv)
+}
 
 #' mpipe.forget
 #' forget the mpipe cached values
