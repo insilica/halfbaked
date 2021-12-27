@@ -31,6 +31,16 @@ runjob = function(expr,libs,jobname,jobfile){
   rstudioapi::jobRunScript(filename,jobname,workingDir = getwd(),importEnv = T)
 }
 
+#' xml.tagnames
+#' @concept maybe we add this to some xmltools package
+#' @param node an xml_document or xml_node
+#' @param prefix (optional) add a prefix "prefix/name/..." to the resulting names
+#' @export
+xml.tagnames = function(node,prefix=""){
+  tag      = sprintf("%s/%s",prefix,xml_name(record))
+  children = sapply(xml2::xml_children(record),function(x){xml.tagnames(x,prefix = tag)},simplify = T) |> unlist()
+  c(tag,children)
+}
 
 ##' resolve.id
 ##' @concept how about an rendnote library?
