@@ -37,8 +37,8 @@ runjob = function(expr,libs,jobname,jobfile){
 #' @param prefix (optional) add a prefix "prefix/name/..." to the resulting names
 #' @export
 xml.tagnames = function(node,prefix=""){
-  tag      = sprintf("%s/%s",prefix,xml_name(record))
-  children = sapply(xml2::xml_children(record),function(x){xml.tagnames(x,prefix = tag)},simplify = T) |> unlist()
+  tag      = sprintf("%s/%s",prefix,xml_name(node))
+  children = sapply(xml2::xml_children(node),function(x){xml.tagnames(x,prefix = tag)},simplify = T) |> unlist()
   c(tag,children)
 }
 
@@ -66,6 +66,14 @@ xml.tagnames = function(node,prefix=""){
 #   }
 #   return(result)
 # }
+
+#' regex.email
+#' a regex for extracting emails
+#' @concept how about a big library of useful regexes?
+#' @export
+regex.email = function(){
+  "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])"
+}
 
 #' regex.doi
 #' a regex for extracting dois
@@ -128,11 +136,10 @@ mpipe.singleton = {
 
 #' mpipe
 #' memoizes the results of a pipe and invalidates on the deparsed code.
-#' @import dplyr
+#' @param expr a piped expression
 #' @param iv an object to invalidate cache, can be a name or any other hashable object. If it changes, the function will be re-memoized.
-#' @param ... a pipe, see example
 #' @examples
-#' data.frame(a=2) |> mutate(b=3) |> mpipe() # memorizes the long chain
+#' data.frame(a=2) |> dplyr::mutate(b=3) |> mpipe() # memorizes the long chain
 #' @export
 mpipe = function(expr,iv=NA){
   egstring = substitute(expr) |> deparse()
@@ -156,6 +163,38 @@ mpipe.forget = function(){mpipe.singleton$forget()}
 #' @export
 xpluck = function(input_list,...){
   pluck(input_list,deparse(expr(...)))
+}
+
+#' @title Try
+#' a wrapper around R try.
+#' Try an expression and getOrElse the result
+#' @param expr an expression to try
+#' @param silent whether to suppress error messages
+#' @examples
+#' Try({log("a")})$get(5)
+#' @export
+Try = function(expr,silent=T){
+  res = try({expr},silent = T)
+  list(get = function(.default=NA){
+    if(class(res) == "try-error"){ .default }else{ res }
+  })
+}
+
+#' @title ifel
+#' an inline version of if{...}else{...}
+#' @param boolexpr an expression to evalu
+#' @param ifexpr an expression if boolexpr is true
+#' @param elexpr an expression if boolexpr is false
+#' @examples
+#' ifel({5==5},1,{1/5})
+#' ifel({5==6},1,{1/5})
+#' @export
+ifel = function(boolexpr,ifexpr,elexpr){
+  if(eval(boolexpr)){
+    eval(ifexpr)
+  }else{
+    eval(elexpr)
+  }
 }
 
 
