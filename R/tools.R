@@ -180,7 +180,6 @@ Try = function(expr,silent=T){
   })
 }
 
-#' @title ifel
 #' an inline version of if{...}else{...}
 #' @param boolexpr an expression to evalu
 #' @param ifexpr an expression if boolexpr is true
@@ -197,4 +196,18 @@ ifel = function(boolexpr,ifexpr,elexpr){
   }
 }
 
+#' chunks input into list of vectors w/ max size chunksize
+#' @param chunksize size of the batches
+#' @examples
+#' chunk(1:1000,28)
+#' @export
+chunk = function(v,chunksize){split(v, ceiling(seq_along(v)/28))}
+
+#' batch make a function into a batch function
+#' @param batchsize size of the batches
+#' @examples
+#' fn = function(x){ sum(x) }
+#' batchify(100,fn)(1:1000)
+#' @export
+batchify = function(batchsize=100,fn){ function(v,...){ pbapply::pblapply(chunk(v,batchsize),fn) } }
 
