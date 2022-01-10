@@ -2,6 +2,8 @@
 
 export(Try)
 export(add.lib)
+export(batchify)
+export(chunk)
 export(ifel)
 export(mpipe)
 export(mpipe.forget)
@@ -20,3 +22,4 @@ import(readr)
 import(reutils)
 import(rstudioapi)
 import(xml2)
+importFrom(pbapply,pblapply)

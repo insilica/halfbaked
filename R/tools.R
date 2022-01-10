@@ -197,6 +197,7 @@ ifel = function(boolexpr,ifexpr,elexpr){
 }
 
 #' chunks input into list of vectors w/ max size chunksize
+#' @param v the vector to chunk
 #' @param chunksize size of the batches
 #' @examples
 #' chunk(1:1000,28)
@@ -204,10 +205,15 @@ ifel = function(boolexpr,ifexpr,elexpr){
 chunk = function(v,chunksize){split(v, ceiling(seq_along(v)/28))}
 
 #' batch make a function into a batch function
+#' @description
+#' it is often useful to run a function in batches.
+#' Particularly side effect functions.
+#' @importFrom pbapply pblapply
 #' @param batchsize size of the batches
+#' @param fn the function to run in batches
 #' @examples
 #' fn = function(x){ sum(x) }
 #' batchify(100,fn)(1:1000)
 #' @export
-batchify = function(batchsize=100,fn){ function(v,...){ pbapply::pblapply(chunk(v,batchsize),fn) } }
+batchify = function(batchsize=100,fn){ function(v,...){ pblapply(chunk(v,batchsize),fn) } }
 
