@@ -19,14 +19,14 @@ throttle = function(fn,speed=0.5){
 #' @import rstudioapi
 #' @import readr
 #' @param expr an expression to run as a job
-#' @param libs a library expression to run in the job
+#' @param libs a vector of library names
 #' @param jobname a name for the job
-#' @param jobfile the file to write the jobscript
 #' @export
-runjob = function(expr,libs,jobname,jobfile){
-  dir.create("job")
-  filename = sprintf("./job/%s.R",jobfile)
-  readr::write_lines(deparse(libs),filename,append = F)
+runjob = function(jobname,libs,expr){
+  libe     = glue::glue("require('{libs}',c=T)")
+  filename = glue::glue("./job/{jobname}.R")
+
+  readr::write_lines(libe,filename,append = F)
   readr::write_lines(deparse(expr),filename,append = T)
   rstudioapi::jobRunScript(filename,jobname,workingDir = getwd(),importEnv = T)
 }
