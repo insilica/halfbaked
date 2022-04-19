@@ -202,7 +202,7 @@ ifel = function(boolexpr,ifexpr,elexpr){
 #' @examples
 #' chunk(1:1000,28)
 #' @export
-chunk = function(v,chunksize){split(v, ceiling(seq_along(v)/28))}
+chunk = function(v,chunksize){split(v, ceiling(seq_along(v)/chunksize))}
 
 #' batch make a function into a batch function
 #' @description
@@ -216,4 +216,3 @@ chunk = function(v,chunksize){split(v, ceiling(seq_along(v)/28))}
 #' batchify(100,fn)(1:1000)
 #' @export
 batchify = function(batchsize=100,fn){ function(v,...){ pblapply(chunk(v,batchsize),fn) } }
-
