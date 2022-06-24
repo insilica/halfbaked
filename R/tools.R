@@ -37,7 +37,7 @@ runjob = function(jobname,libs,expr){
 #' @param prefix (optional) add a prefix "prefix/name/..." to the resulting names
 #' @export
 xml.tagnames = function(node,prefix=""){
-  tag      = sprintf("%s/%s",prefix,xml_name(node))
+  tag      = sprintf("%s/%s",prefix,xml2::xml_name(node))
   children = sapply(xml2::xml_children(node),function(x){xml.tagnames(x,prefix = tag)},simplify = T) |> unlist()
   c(tag,children)
 }
